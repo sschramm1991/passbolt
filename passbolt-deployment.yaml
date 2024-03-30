@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose-ce.yaml
+    kompose.version: 1.27.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: passbolt
+  name: passbolt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: passbolt
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose-ce.yaml
+        kompose.version: 1.27.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: passbolt
+    spec:
+      containers:
+        - args:
+            - /usr/bin/wait-for.sh
+            - -t
+            - "0"
+            - db:3306
+            - --
+            - /docker-entrypoint.sh
+          env:
+            - name: APP_FULL_BASE_URL
+              value: https://pass.schramm-mainz.de
+            - name: DATASOURCES_DEFAULT_DATABASE
+              value: passbolt
+            - name: DATASOURCES_DEFAULT_HOST
+              value: db.passbolt
+            - name: DATASOURCES_DEFAULT_PASSWORD
+              value: "some password"
+            - name: DATASOURCES_DEFAULT_USERNAME
+              value: passbolt
+          image: passbolt/passbolt:latest-ce
+          name: passbolt
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/passbolt/gpg
+              name: passbolt-gpg-pvc
+            - mountPath: /etc/passbolt/jwt
+              name: passbolt-jwt-pvc
+      restartPolicy: Always
+      volumes:
+        - name: passbolt-gpg-pvc
+          persistentVolumeClaim:
+            claimName: passbolt-gpg-pvc
+        - name: passbolt-jwt-pvc
+          persistentVolumeClaim:
+            claimName: passbolt-jwt-pvc
+status: {}

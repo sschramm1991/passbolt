@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: passbolt
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    #cert-manager.io/cluster-issuer: "letsencrypt-production"
+    nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
+    kubernetes.io/ingress.allow-http: "false"
+    cert-manager.io/issuer: "cert-issuer-pb"
+    cert-manager.io/privatekey-size: "4096"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - pass.schramm-mainz.de
+    secretName: certmanager-pass.schramm-mainz.de
+  rules:
+    - host: pass.schramm-mainz.de
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: passbolt
+              port:
+                number: 80
